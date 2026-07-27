@@ -23,12 +23,20 @@ def read_holdings():
 
 def get_latest_nav(scheme_code):
     url = f"https://api.mfapi.in/mf/{scheme_code}"
+    try:
+        response = requests.get(url, timeout=5)
+        data = response.json()
+        latest_entry = data["data"][0]["nav"]
+        nav = float(latest_entry)
+        return nav
+    except requests.exceptions.RequestException:
+        print(f"Error: could not reach API for scheme code {scheme_code}")
+        return None 
+    except (KeyError, IndexError):
+        print(f"Error: unexpected response format for scheme code {scheme_code}")
+        return None
+    except Exception as e:
+        print(f"Unexpected error for scheme code {scheme_code}: {e}")
+        return None
 
-    response = requests.get(url)
-    data = response.json()
-
-    latest_entry = data["data"][0]["nav"]
-    nav = float(latest_entry)
-    return nav
-
-print(get_latest_nav(122639))
+print(get_latest_nav(122639)) 
