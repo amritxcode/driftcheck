@@ -39,4 +39,15 @@ def get_latest_nav(scheme_code):
         print(f"Unexpected error for scheme code {scheme_code}: {e}")
         return None
 
-print(get_latest_nav(122639)) 
+def calculate_portfolio(holdings):
+    for holding in holdings:
+        nav = get_latest_nav(holding["scheme_code"])
+        if nav is None:
+            print(f"Skipping {holding['fund_name']} - no NAV dala")
+            continue
+        else:
+            current_value = holding["units"]*nav
+            holding["current_value"] = current_value
+            holding["nav"] = nav
+
+    return holdings
