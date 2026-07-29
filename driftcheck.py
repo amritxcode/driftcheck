@@ -54,3 +54,19 @@ def calculate_portfolio(holdings):
 
     return holdings
 
+def calculate_drift(holdings):
+    total_value = 0
+    for holding in holdings:
+        if "current_value" not in holding:
+            continue
+        total_value += holding["current_value"]
+
+    for holding in holdings:
+        if "current_value" not in holding:
+            continue
+        actual_allocation = (holding["current_value"] / total_value) * 100
+        drift = actual_allocation - holding["target_allocation"]
+        holding["actual_allocation"] = actual_allocation
+        holding["drift"] = drift
+
+    return holdings
