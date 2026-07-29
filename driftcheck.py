@@ -75,11 +75,13 @@ def calculate_drift(holdings):
 
 def print_report(holdings, threshold=5):
     print("\n--- Portfolio Drift Report ---\n")
-    for holding in holdings:
-        if 'current_value' not in holding:
-            continue
+    valid_holdings = [h for h in holdings if "current_value" in h]
+    valid_holdings.sort(key=lambda h: abs(h["drift"]), reverse=True)
 
+    total = sum(h["current_value"] for h in valid_holdings)
+    print(f"Total Portfolio Value: ₹{round(total, 2)}\n")
     
+    for holding in valid_holdings:
         fund_name = holding["fund_name"]
         current_value = round(holding["current_value"], 2)
         target = holding["target_allocation"]
