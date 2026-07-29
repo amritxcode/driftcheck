@@ -24,32 +24,38 @@ def read_holdings():
         print(f"Error: could not find holdings file at {CSV_PATH}")
         sys.exit(1)
 
-def get_latest_nav(scheme_code):
+def get_latest_nav(scheme_code, retries=2):
     url = f"https://api.mfapi.in/mf/{scheme_code}"
-    try:
-        response = requests.get(url, timeout=5)
-        data = response.json()
-        latest_entry = data["data"][0]["nav"]
-        nav = float(latest_entry)
-        return nav
-    except requests.exceptions.RequestException:
-        print(f"Error: could not reach API for scheme code {scheme_code}")
-        return None 
-    except (KeyError, IndexError):
-        print(f"Error: unexpected response format for scheme code {scheme_code}")
-        return None
-    except Exception as e:
-        print(f"Unexpected error for scheme code {scheme_code}: {e}")
-        return None
+
+    for attempt in range(retries):
+        try:
+            response = requests.get(url, timeout=5)
+            data = response.json()
+            latest_entry = data["data"][0]["nav"]
+            nav = float(latest_entry)
+            return nav
+        except requests.exceptions.RequestException:
+            if attempt < retries - 1:
+                print(f"Retrying scheme code {scheme_code} (attempt {attempt + 2}/{retries})...")
+                time.sleep(1)
+                continue
+            print(f"Error: could not reach API for scheme code {scheme_code} after {retries} attempts")
+            return None
+        except (KeyError, IndexError):
+            print(f"Error: unexpected response format for scheme code {scheme_code}")
+            return None
+        except Exception as e:
+            print(f"Unexpected error for scheme code {scheme_code}: {e}")
+            return None
 
 def calculate_portfolio(holdings):
     for holding in holdings:
         nav = get_latest_nav(holding["scheme_code"])
         if nav is None:
-            print(f"Skipping {holding['fund_name']} - no NAV dala")
+            print(f"Skipping {holding['fund_name']} - no NAV data")
             continue
         else:
-            current_value = holding["units"]*nav
+            current_value = holding["units"] * nav
             holding["current_value"] = current_value
             holding["nav"] = nav
         time.sleep(1)
@@ -80,7 +86,7 @@ def print_report(holdings, threshold=5):
 
     total = sum(h["current_value"] for h in valid_holdings)
     print(f"Total Portfolio Value: ₹{round(total, 2)}\n")
-    
+
     for holding in valid_holdings:
         fund_name = holding["fund_name"]
         current_value = round(holding["current_value"], 2)
@@ -107,11 +113,25 @@ def save_snapshot(holdings):
     print(f"Snapshot saved to {filepath}")
 
 def main():
+    start_time = time.time()
+
     data = read_holdings()
+    total_funds = len(data)
+
     data = calculate_portfolio(data)
+    successful_fetches = len([h for h in data if "current_value" in h])
+
     data = calculate_drift(data)
     print_report(data)
     save_snapshot(data)
+
+    elapsed = round(time.time() - start_time, 2)
+    success_rate = round((successful_fetches / total_funds) * 100, 1) if total_funds > 0 else 0
+
+    print(f"--- Run Metrics ---")
+    print(f"Funds processed: {total_funds}")
+    print(f"NAV fetch success rate: {success_rate}% ({successful_fetches}/{total_funds})")
+    print(f"Execution time: {elapsed}s")
     print()
 
 if __name__ == "__main__":
