@@ -70,3 +70,28 @@ def calculate_drift(holdings):
         holding["drift"] = drift
 
     return holdings
+
+def print_report(holdings, threshold=5):
+    print("\n--- Portfolio Drift Report ---\n")
+    for holding in holdings:
+        if 'current_value' not in holding:
+            continue
+
+    
+        fund_name = holding["fund_name"]
+        current_value = round(holding["current_value"], 2)
+        target = holding["target_allocation"]
+        actual = round(holding["actual_allocation"], 2)
+        drift = round(holding["drift"], 2)
+
+        flag = " REBALANCE NEEDED" if abs(drift) > threshold else ""
+
+        print(f"{fund_name}")
+        print(f"  Value: ₹{current_value} | Target: {target}% | Actual: {actual}% | Drift: {drift}%{flag}")
+        print()
+
+data = read_holdings()
+data = calculate_portfolio(data)
+data = calculate_drift(data)
+print_report(data)
+
