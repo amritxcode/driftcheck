@@ -3,6 +3,8 @@ import os
 import sys
 import requests
 import time
+import json
+from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(BASE_DIR, "data", "holdings.csv")
@@ -90,11 +92,24 @@ def print_report(holdings, threshold=5):
         print(f"  Value: ₹{current_value} | Target: {target}% | Actual: {actual}% | Drift: {drift}%{flag}")
         print()
 
+def save_snapshot(holdings):
+    os.makedirs(os.path.join(BASE_DIR, "snapshots"), exist_ok=True)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filepath = os.path.join(BASE_DIR, "snapshots", f"snapshot_{timestamp}.json")
+
+    snapshot_data = [h for h in holdings if "current_value" in h]
+
+    with open(filepath, "w") as file:
+        json.dump(snapshot_data, file, indent=2)
+
+    print(f"Snapshot saved to {filepath}")
+
 def main():
     data = read_holdings()
     data = calculate_portfolio(data)
     data = calculate_drift(data)
     print_report(data)
+    save_snapshot(data)
 
 if __name__ == "__main__":
     main()
