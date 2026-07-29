@@ -2,6 +2,7 @@ import csv
 import os
 import sys
 import requests
+import time
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(BASE_DIR, "data", "holdings.csv")
@@ -49,5 +50,7 @@ def calculate_portfolio(holdings):
             current_value = holding["units"]*nav
             holding["current_value"] = current_value
             holding["nav"] = nav
+        time.sleep(1)
 
     return holdings
+
