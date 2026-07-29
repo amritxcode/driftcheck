@@ -90,8 +90,11 @@ def print_report(holdings, threshold=5):
         print(f"  Value: ₹{current_value} | Target: {target}% | Actual: {actual}% | Drift: {drift}%{flag}")
         print()
 
-data = read_holdings()
-data = calculate_portfolio(data)
-data = calculate_drift(data)
-print_report(data)
+def main():
+    data = read_holdings()
+    data = calculate_portfolio(data)
+    data = calculate_drift(data)
+    print_report(data)
 
+if __name__ == "__main__":
+    main()
