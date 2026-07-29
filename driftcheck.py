@@ -110,6 +110,7 @@ def main():
     data = calculate_drift(data)
     print_report(data)
     save_snapshot(data)
+    print()
 
 if __name__ == "__main__":
     main()
